@@ -1,0 +1,303 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        request.auth.token.email == 'rajeshparas2@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validation Blueprints ( Synchronized verbatim with firebase-blueprint.json )
+    function isValidCustomer(data) {
+      return data.keys().hasAll(['ownerId', 'name', 'phone', 'email', 'notes', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'name', 'phone', 'email', 'notes', 'createdAt', 'updatedAt'])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
+        && data.phone is string && data.phone.size() >= 3 && data.phone.size() <= 30
+        && data.email is string && data.email.size() <= 120
+        && data.notes is string && data.notes.size() <= 500
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidInventoryPart(data) {
+      return data.keys().hasAll([
+          'ownerId', 'sku', 'name', 'category', 'compatibleBrand', 'compatibleModels',
+          'binLocation', 'supplier', 'quantity', 'minStockLevel', 'unitCostCents',
+          'retailPriceCents', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'sku', 'name', 'category', 'compatibleBrand', 'compatibleModels',
+          'binLocation', 'supplier', 'quantity', 'minStockLevel', 'unitCostCents',
+          'retailPriceCents', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 40 && data.sku.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 120
+        && data.category is string && data.category.size() <= 32
+        && data.category in ['display', 'battery', 'charging_port', 'camera', 'housing', 'ic_chip', 'adhesive_consumable', 'accessory']
+        && data.compatibleBrand is string && data.compatibleBrand.size() >= 1 && data.compatibleBrand.size() <= 50
+        && data.compatibleModels is string && data.compatibleModels.size() >= 1 && data.compatibleModels.size() <= 160
+        && data.binLocation is string && data.binLocation.size() >= 1 && data.binLocation.size() <= 24
+        && data.supplier is string && data.supplier.size() <= 80
+        && data.quantity is int && data.quantity >= 0 && data.quantity <= 100000
+        && data.minStockLevel is int && data.minStockLevel >= 0 && data.minStockLevel <= 10000
+        && data.unitCostCents is int && data.unitCostCents >= 0 && data.unitCostCents <= 10000000
+        && data.retailPriceCents is int && data.retailPriceCents >= 0 && data.retailPriceCents <= 10000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTicket(data) {
+      return data.keys().hasAll([
+          'ownerId', 'ticketNumber', 'customerId', 'customerName', 'deviceBrand',
+          'deviceModel', 'imeiOrSerial', 'passcodeOrPattern', 'issueCategory',
+          'issueDescription', 'technicianNotes', 'assignedTech', 'priority',
+          'status', 'laborCents', 'partsTotalCents', 'warrantyDays', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'ticketNumber', 'customerId', 'customerName', 'deviceBrand',
+          'deviceModel', 'imeiOrSerial', 'passcodeOrPattern', 'issueCategory',
+          'issueDescription', 'technicianNotes', 'assignedTech', 'priority',
+          'status', 'laborCents', 'partsTotalCents', 'warrantyDays', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.ticketNumber is string && data.ticketNumber.size() >= 3 && data.ticketNumber.size() <= 24 && data.ticketNumber.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 && data.customerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 80
+        && data.deviceBrand is string && data.deviceBrand.size() >= 1 && data.deviceBrand.size() <= 40
+        && data.deviceModel is string && data.deviceModel.size() >= 1 && data.deviceModel.size() <= 80
+        && data.imeiOrSerial is string && data.imeiOrSerial.size() <= 32
+        && data.passcodeOrPattern is string && data.passcodeOrPattern.size() <= 32
+        && data.issueCategory is string && data.issueCategory.size() <= 24
+        && data.issueCategory in ['screen', 'battery', 'charging_port', 'water_damage', 'camera', 'motherboard', 'software', 'other']
+        && data.issueDescription is string && data.issueDescription.size() >= 2 && data.issueDescription.size() <= 1000
+        && data.technicianNotes is string && data.technicianNotes.size() <= 1000
+        && data.assignedTech is string && data.assignedTech.size() >= 1 && data.assignedTech.size() <= 60
+        && data.priority is string && data.priority.size() <= 16
+        && data.priority in ['standard', 'urgent', 'express']
+        && data.status is string && data.status.size() <= 24
+        && data.status in ['intake', 'diagnosing', 'awaiting_parts', 'in_repair', 'testing', 'ready_pickup', 'completed', 'cancelled']
+        && data.laborCents is int && data.laborCents >= 0 && data.laborCents <= 10000000
+        && data.partsTotalCents is int && data.partsTotalCents >= 0 && data.partsTotalCents <= 10000000
+        && data.warrantyDays is int && data.warrantyDays >= 0 && data.warrantyDays <= 730
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStockMovement(data) {
+      return data.keys().hasAll([
+          'ownerId', 'partId', 'partSku', 'partName', 'ticketId', 'ticketNumber',
+          'type', 'quantityDelta', 'unitCostCents', 'unitPriceCents', 'note', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'partId', 'partSku', 'partName', 'ticketId', 'ticketNumber',
+          'type', 'quantityDelta', 'unitCostCents', 'unitPriceCents', 'note', 'createdAt'
+        ])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.partId is string && data.partId.size() >= 1 && data.partId.size() <= 128 && data.partId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.partSku is string && data.partSku.size() >= 2 && data.partSku.size() <= 40 && data.partSku.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.partName is string && data.partName.size() >= 2 && data.partName.size() <= 120
+        && data.ticketId is string && data.ticketId.size() <= 128 && data.ticketId.matches('^[a-zA-Z0-9_\\-]*$')
+        && data.ticketNumber is string && data.ticketNumber.size() <= 24
+        && data.type is string && data.type.size() <= 16
+        && data.type in ['restock', 'repair_use', 'adjustment']
+        && data.quantityDelta is int && data.quantityDelta != 0 && data.quantityDelta >= -10000 && data.quantityDelta <= 10000
+        && data.unitCostCents is int && data.unitCostCents >= 0 && data.unitCostCents <= 10000000
+        && data.unitPriceCents is int && data.unitPriceCents >= 0 && data.unitPriceCents <= 10000000
+        && data.note is string && data.note.size() <= 300
+        && data.createdAt is timestamp;
+    }
+
+    // 1. Trusted Admin Registry (Read-only for self, never client-writable)
+    match /admins/{adminId} {
+      allow get: if isVerified() && isValidId(adminId) && request.auth.uid == adminId;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // 2. Customer Directory (Isolated PII)
+    match /customers/{customerId} {
+      allow get: if isVerified() && isValidId(customerId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerified() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(customerId)
+        && isValidCustomer(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerified()
+        && isValidId(customerId)
+        && isValidCustomer(incoming())
+        && (existing().ownerId == request.auth.uid || isAdmin())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'email', 'notes', 'updatedAt']);
+
+      allow delete: if isVerified() && isValidId(customerId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    // 3. Spare Parts Inventory
+    match /inventoryParts/{partId} {
+      allow get: if isVerified() && isValidId(partId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerified() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(partId)
+        && isValidInventoryPart(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerified()
+        && isValidId(partId)
+        && isValidInventoryPart(incoming())
+        && (existing().ownerId == request.auth.uid || isAdmin())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Stock level mutation (restock / adjustment / repair allocation)
+          incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'updatedAt']) ||
+          // Action 2: Catalog metadata & pricing update
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'sku', 'name', 'category', 'compatibleBrand', 'compatibleModels',
+            'binLocation', 'supplier', 'minStockLevel', 'unitCostCents',
+            'retailPriceCents', 'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerified() && isValidId(partId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    // 4. Mobile Repair Tickets
+    match /tickets/{ticketId} {
+      allow get: if isVerified() && isValidId(ticketId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerified() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(ticketId)
+        && isValidTicket(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().status in ['intake', 'diagnosing', 'awaiting_parts', 'in_repair']
+        && incoming().partsTotalCents == 0
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/customers/$(incoming().customerId))
+        && get(/databases/$(database)/documents/customers/$(incoming().customerId)).data.ownerId == request.auth.uid;
+
+      allow update: if isVerified()
+        && isValidId(ticketId)
+        && isValidTicket(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().customerId == existing().customerId
+        && incoming().ticketNumber == existing().ticketNumber
+        && incoming().updatedAt == request.time
+        && (
+          // Active Bench Actions (Blocked once ticket reaches terminal 'completed' or 'cancelled')
+          (
+            existing().ownerId == request.auth.uid
+            && existing().status != 'completed'
+            && existing().status != 'cancelled'
+            && (
+              // Action 1: Workflow status, bench notes & technician assignment
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'status', 'technicianNotes', 'assignedTech', 'priority', 'updatedAt'
+              ]) ||
+              // Action 2: Full bench intake / quote edit
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'customerName', 'deviceBrand', 'deviceModel', 'imeiOrSerial',
+                'passcodeOrPattern', 'issueCategory', 'issueDescription',
+                'technicianNotes', 'assignedTech', 'priority', 'laborCents',
+                'warrantyDays', 'status', 'updatedAt'
+              ]) ||
+              // Action 3: Inventory part allocation sync
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'partsTotalCents', 'status', 'technicianNotes', 'updatedAt'
+              ])
+            )
+          ) ||
+          // Admin Override (Allows reopening or correcting terminal tickets)
+          (
+            isAdmin()
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'technicianNotes', 'laborCents', 'warrantyDays', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if isVerified()
+        && isValidId(ticketId)
+        && (
+          (existing().ownerId == request.auth.uid && existing().status == 'cancelled') ||
+          isAdmin()
+        );
+    }
+
+    // 5. Immutable Stock Movement Ledger (Atomically coupled via getAfter)
+    match /stockMovements/{movementId} {
+      allow get: if isVerified() && isValidId(movementId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerified() && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(movementId)
+        && isValidStockMovement(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/inventoryParts/$(incoming().partId))
+        && get(/databases/$(database)/documents/inventoryParts/$(incoming().partId)).data.ownerId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/inventoryParts/$(incoming().partId)).data.updatedAt == request.time
+        && getAfter(/databases/$(database)/documents/inventoryParts/$(incoming().partId)).data.quantity == get(/databases/$(database)/documents/inventoryParts/$(incoming().partId)).data.quantity + incoming().quantityDelta
+        && (
+          (incoming().type == 'restock' && incoming().quantityDelta > 0 && incoming().ticketId == '' && incoming().ticketNumber == '') ||
+          (incoming().type == 'adjustment' && incoming().ticketId == '' && incoming().ticketNumber == '') ||
+          (
+            incoming().type == 'repair_use'
+            && incoming().quantityDelta < 0
+            && isValidId(incoming().ticketId)
+            && incoming().ticketNumber.size() >= 3
+            && exists(/databases/$(database)/documents/tickets/$(incoming().ticketId))
+            && get(/databases/$(database)/documents/tickets/$(incoming().ticketId)).data.ownerId == request.auth.uid
+            && get(/databases/$(database)/documents/tickets/$(incoming().ticketId)).data.status != 'completed'
+            && get(/databases/$(database)/documents/tickets/$(incoming().ticketId)).data.status != 'cancelled'
+            && getAfter(/databases/$(database)/documents/tickets/$(incoming().ticketId)).data.updatedAt == request.time
+          )
+        );
+
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(movementId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}

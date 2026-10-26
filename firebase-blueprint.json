@@ -1,0 +1,464 @@
+{
+  "entities": {
+    "Customer": {
+      "title": "Customer",
+      "description": "Mobile repair shop customer profile containing isolated contact PII.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated shop owner UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Customer full name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer primary phone number.",
+          "minLength": 3,
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "description": "Optional customer email address (empty string if not provided).",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "notes": {
+          "type": "string",
+          "description": "Customer preferences or service notes.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "phone",
+        "email",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "InventoryPart": {
+      "title": "InventoryPart",
+      "description": "Spare part SKU in the mobile repair shop inventory.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated shop owner UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sku": {
+          "type": "string",
+          "description": "Internal stock keeping unit identifier.",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Part display title.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Hardware component category.",
+          "enum": [
+            "display",
+            "battery",
+            "charging_port",
+            "camera",
+            "housing",
+            "ic_chip",
+            "adhesive_consumable",
+            "accessory"
+          ]
+        },
+        "compatibleBrand": {
+          "type": "string",
+          "description": "Manufacturer brand compatibility.",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "compatibleModels": {
+          "type": "string",
+          "description": "Compatible handset models or board numbers.",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "binLocation": {
+          "type": "string",
+          "description": "Physical storage drawer or ESD bin code.",
+          "minLength": 1,
+          "maxLength": 24
+        },
+        "supplier": {
+          "type": "string",
+          "description": "Parts vendor or distributor name.",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Current on-hand unit stock count."
+        },
+        "minStockLevel": {
+          "type": "integer",
+          "description": "Low-stock alert threshold."
+        },
+        "unitCostCents": {
+          "type": "integer",
+          "description": "Wholesale cost per unit in cents."
+        },
+        "retailPriceCents": {
+          "type": "integer",
+          "description": "Customer repair part price per unit in cents."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "sku",
+        "name",
+        "category",
+        "compatibleBrand",
+        "compatibleModels",
+        "binLocation",
+        "supplier",
+        "quantity",
+        "minStockLevel",
+        "unitCostCents",
+        "retailPriceCents",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RepairTicket": {
+      "title": "RepairTicket",
+      "description": "Mobile device repair work order tracking diagnostics, parts, labor, and status.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated shop owner UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ticketNumber": {
+          "type": "string",
+          "description": "Human-readable ticket code (e.g. TKT-1001).",
+          "minLength": 3,
+          "maxLength": 24,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference ID to /customers/{customerId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer display name snapshot (non-PII contact fields remain in /customers).",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "deviceBrand": {
+          "type": "string",
+          "description": "Device manufacturer.",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "deviceModel": {
+          "type": "string",
+          "description": "Specific handset or tablet model.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "imeiOrSerial": {
+          "type": "string",
+          "description": "IMEI or hardware serial number.",
+          "minLength": 0,
+          "maxLength": 32
+        },
+        "passcodeOrPattern": {
+          "type": "string",
+          "description": "Diagnostic unlock note.",
+          "minLength": 0,
+          "maxLength": 32
+        },
+        "issueCategory": {
+          "type": "string",
+          "description": "Primary fault classification.",
+          "enum": [
+            "screen",
+            "battery",
+            "charging_port",
+            "water_damage",
+            "camera",
+            "motherboard",
+            "software",
+            "other"
+          ]
+        },
+        "issueDescription": {
+          "type": "string",
+          "description": "Customer reported fault and intake condition checklist.",
+          "minLength": 2,
+          "maxLength": 1000
+        },
+        "technicianNotes": {
+          "type": "string",
+          "description": "Bench diagnostics, board readings, and QC verification notes.",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "assignedTech": {
+          "type": "string",
+          "description": "Assigned bench technician name.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "priority": {
+          "type": "string",
+          "description": "Queue SLA priority tier.",
+          "enum": [
+            "standard",
+            "urgent",
+            "express"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current repair bench workflow state.",
+          "enum": [
+            "intake",
+            "diagnosing",
+            "awaiting_parts",
+            "in_repair",
+            "testing",
+            "ready_pickup",
+            "completed",
+            "cancelled"
+          ]
+        },
+        "laborCents": {
+          "type": "integer",
+          "description": "Service labor fee in cents."
+        },
+        "partsTotalCents": {
+          "type": "integer",
+          "description": "Cumulative retail value of allocated inventory parts in cents."
+        },
+        "warrantyDays": {
+          "type": "integer",
+          "description": "Post-repair warranty coverage in days."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "ticketNumber",
+        "customerId",
+        "customerName",
+        "deviceBrand",
+        "deviceModel",
+        "imeiOrSerial",
+        "passcodeOrPattern",
+        "issueCategory",
+        "issueDescription",
+        "technicianNotes",
+        "assignedTech",
+        "priority",
+        "status",
+        "laborCents",
+        "partsTotalCents",
+        "warrantyDays",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StockMovement": {
+      "title": "StockMovement",
+      "description": "Immutable stock ledger entry recording part restocks, adjustments, and ticket allocations.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated shop owner UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "partId": {
+          "type": "string",
+          "description": "Reference ID to /inventoryParts/{partId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "partSku": {
+          "type": "string",
+          "description": "SKU snapshot.",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "partName": {
+          "type": "string",
+          "description": "Part name snapshot.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "ticketId": {
+          "type": "string",
+          "description": "Reference ID to /tickets/{ticketId} when type is repair_use, or empty string.",
+          "minLength": 0,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]*$"
+        },
+        "ticketNumber": {
+          "type": "string",
+          "description": "Ticket code snapshot when type is repair_use, or empty string.",
+          "minLength": 0,
+          "maxLength": 24
+        },
+        "type": {
+          "type": "string",
+          "description": "Stock movement classification.",
+          "enum": [
+            "restock",
+            "repair_use",
+            "adjustment"
+          ]
+        },
+        "quantityDelta": {
+          "type": "integer",
+          "description": "Signed integer stock change (non-zero)."
+        },
+        "unitCostCents": {
+          "type": "integer",
+          "description": "Unit wholesale cost in cents at time of movement."
+        },
+        "unitPriceCents": {
+          "type": "integer",
+          "description": "Unit retail price in cents at time of movement."
+        },
+        "note": {
+          "type": "string",
+          "description": "Movement reason, PO reference, or bench note.",
+          "minLength": 0,
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "partId",
+        "partSku",
+        "partName",
+        "ticketId",
+        "ticketNumber",
+        "type",
+        "quantityDelta",
+        "unitCostCents",
+        "unitPriceCents",
+        "note",
+        "createdAt"
+      ]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted system-managed administrator role marker.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "description": "Administrator role designation.",
+          "enum": [
+            "admin"
+          ],
+          "minLength": 5,
+          "maxLength": 5
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": [
+        "role",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customer directory documents with isolated contact PII scoped to shop owner."
+    },
+    "/inventoryParts/{partId}": {
+      "schema": "InventoryPart",
+      "description": "Spare parts inventory catalog and on-hand stock quantities."
+    },
+    "/tickets/{ticketId}": {
+      "schema": "RepairTicket",
+      "description": "Mobile repair bench tickets with status workflow and terminal locking."
+    },
+    "/stockMovements/{movementId}": {
+      "schema": "StockMovement",
+      "description": "Immutable stock movement audit ledger atomically coupled to inventoryParts."
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminRecord",
+      "description": "Read-only trusted administrator registry."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "BenchFlow Repair & Inventory",
+  "description": "Mobile repair shop operations, ticket tracking, customer intake, and spare parts inventory management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
